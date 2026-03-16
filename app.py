@@ -1,6 +1,6 @@
 import random
 import streamlit as st
-from logic_utils import get_range_for_difficulty, update_score, parse_guess, check_guess
+from logic_utils import get_range_for_difficulty, update_score, parse_guess, check_guess, check_in_range
 
 st.set_page_config(page_title="Glitchy Guesser", page_icon="🎮")
 
@@ -15,6 +15,7 @@ difficulty = st.sidebar.selectbox(
     index=1,
 )
 
+#changed the attempts to better match the game modes
 attempt_limit_map = {
     "Easy": 6,
     "Normal": 6,
@@ -44,7 +45,8 @@ if "secret" not in st.session_state:
 if "attempts" not in st.session_state:
     st.session_state.attempts = 0
 
-#made sure the UI matched the attempts for each game mode
+#made sure the UI matched the attempts for each game mode, no hard coded vals
+
 st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts left: {attempt_limit - st.session_state.attempts}")
 
@@ -63,17 +65,11 @@ if "last_message" not in st.session_state:
 st.subheader("Make a guess")
 
 #made all attempts the same number on the side bar and main box
+
 st.info(
     f"Guess a number between {low} and {high}. "
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
-
-with st.expander("Developer Debug Info"):
-    st.write("Secret:", st.session_state.secret)
-    st.write("Attempts:", st.session_state.attempts)
-    st.write("Score:", st.session_state.score)
-    st.write("Difficulty:", difficulty)
-    st.write("History:", st.session_state.history)
 
 raw_guess = st.text_input(
     "Enter your guess:",
@@ -111,8 +107,8 @@ if submit:
     # made sure the numbers entered were in range and did not change the score / attempts
     if not ok:
         st.error(err)
-    elif guess_int < low or guess_int > high:
-        st.error(f"Please enter a number between {low} and {high}. This does not count as an attempt.")
+    elif not check_in_range(guess_int, low, high)[0]:
+        st.error(check_in_range(guess_int, low, high)[1])
     else:
         st.session_state.attempts += 1
         st.session_state.history.append(guess_int)
@@ -126,11 +122,12 @@ if submit:
             attempt_number=st.session_state.attempts,
         )
 
+        # changed secret to secret number for users
         if outcome == "Win":
             st.balloons()
             st.session_state.status = "won"
             st.success(
-                f"You won! The secret was {st.session_state.secret}. "
+                f"You won! The secret number was {st.session_state.secret}. "
                 f"Final score: {st.session_state.score}"
             )
         else:
@@ -138,9 +135,18 @@ if submit:
                 st.session_state.status = "lost"
                 st.error(
                     f"Out of attempts! "
-                    f"The secret was {st.session_state.secret}. "
+                    f"The secret number was {st.session_state.secret}. "
                     f"Score: {st.session_state.score}"
                 )
+
+# changed location of function to match score that user sees with what the debugger box says
+
+with st.expander("Developer Debug Info"):
+    st.write("Secret:", st.session_state.secret)
+    st.write("Attempts:", st.session_state.attempts)
+    st.write("Score:", st.session_state.score)
+    st.write("Difficulty:", difficulty)
+    st.write("History:", st.session_state.history)
 
 if st.session_state.last_message and st.session_state.status == "playing":
     if show_hint:

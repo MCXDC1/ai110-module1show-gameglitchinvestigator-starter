@@ -6,8 +6,8 @@ def get_range_for_difficulty(difficulty: str):
         return 1, 50
     if difficulty == "Hard":
         return 1, 100
-    return 1, 100
-
+    
+# remove second return since dropdown box only allows three options
 
 def parse_guess(raw: str):
     """
@@ -31,6 +31,18 @@ def parse_guess(raw: str):
 
     return True, value, None
 
+#Checks the numbers entered are in the range for each game mode
+
+def check_in_range(guess: int, low: int, high: int):
+    """
+    Validate that guess is within [low, high].
+
+    Returns: (ok: bool, error_message: str | None)
+    """
+    if guess < low or guess > high:
+        return False, f"Please enter a number between {low} and {high}. This does not count as an attempt."
+    return True, None
+
 
 def check_guess(guess, secret):
     """
@@ -50,14 +62,13 @@ def check_guess(guess, secret):
 def update_score(current_score: int, outcome: str, attempt_number: int):
     """Update score based on outcome and attempt number."""
     if outcome == "Win":
-        points = 100 - 10 * (attempt_number + 1)
+        points = 100 - 10 * attempt_number
         if points < 10:
             points = 10
         return current_score + points
 
+# changed scoring to be -5 for both low and high
     if outcome == "Too High":
-        if attempt_number % 2 == 0:
-            return current_score + 5
         return current_score - 5
 
     if outcome == "Too Low":
